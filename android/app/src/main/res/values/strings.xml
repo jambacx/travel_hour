@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+   <!-- your facebook app id -->
+    <string name="facebook_app_id">1931863*****************</string>
+
+    <!-- your facebook client token -->
+    <string name="facebook_client_token">49550736b8373*****************</string>
+</resources>
