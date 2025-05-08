@@ -5,13 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:travel_hour/blocs/sign_in_bloc.dart';
 import 'package:travel_hour/config/config.dart';
 import 'package:travel_hour/pages/done.dart';
+import 'package:travel_hour/pages/login.dart';
 import 'package:travel_hour/services/app_service.dart';
 import 'package:travel_hour/utils/next_screen.dart';
 import 'package:travel_hour/utils/snacbar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:travel_hour/widgets/language.dart';
-
-
 
 class SignInPage extends StatefulWidget {
 
@@ -177,12 +176,6 @@ class _SignInPageState extends State<SignInPage> {
     
   }
 
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -266,6 +259,45 @@ class _SignInPageState extends State<SignInPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // Email/Password Sign In Button
+                  Container(
+                    height: 50,
+                    width: MediaQuery.of(context).size.width * 0.80,
+                    child: TextButton(
+                        onPressed: () {
+                          nextScreen(context, LoginPage(tag: widget.tag));
+                        },
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith((states) => Theme.of(context).primaryColor),
+                          shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5)
+                          ))
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              color: Colors.white,
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              'Sign In with Email',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white),
+                            )
+                          ],
+                        )),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  // Google Sign In Button
                   Container(
                     height: 50,
                     width: MediaQuery.of(context).size.width * 0.80,
@@ -306,6 +338,7 @@ class _SignInPageState extends State<SignInPage> {
                   SizedBox(
                     height: 15,
                   ),
+                  // Facebook Sign In Button
                   Container(
                     height: 50,
                     width: MediaQuery.of(context).size.width * 0.80,
@@ -348,6 +381,7 @@ class _SignInPageState extends State<SignInPage> {
                   SizedBox(
                     height: 15,
                   ),
+                  // Apple Sign In Button (iOS only)
                   Platform.isAndroid
                       ? Container()
                       : Container(
@@ -398,8 +432,4 @@ class _SignInPageState extends State<SignInPage> {
       ),
     );
   }
-
-
-
-  
 }

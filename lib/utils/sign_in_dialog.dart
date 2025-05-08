@@ -21,8 +21,6 @@ openSignInDialog(context){
 
               TextButton(
               onPressed: (){
-                
-                
                 Navigator.pop(context);
               }, 
               child: Text('cancel').tr())

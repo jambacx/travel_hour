@@ -140,8 +140,28 @@
     "delete-user-data": "Delete My Data & Account",
     "account-delete-title": "Do you really want to delete your data?",
     "account-delete-subtitle": "Your account information like profile data, bookmarks, etc will be erased from the app database and You will have to sign up again in the app to continue.",
-    "account-delete-confirm": "Yes, Delete My Account"
+    "account-delete-confirm": "Yes, Delete My Account",
 
-
-
+    "create account": "Create Account",
+    "create your account": "Create Your Account",
+    "enter your details to create an account": "Enter your details to create an account",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "confirm password": "Confirm Password",
+    "register": "Register",
+    "already have an account?": "Already have an account?",
+    "please enter your name": "Please enter your name",
+    "please enter your email": "Please enter your email",
+    "please enter a valid email": "Please enter a valid email",
+    "please enter a password": "Please enter a password",
+    "password must be at least 6 characters": "Password must be at least 6 characters",
+    "please confirm your password": "Please confirm your password",
+    "passwords do not match": "Passwords do not match",
+    "welcome back": "Welcome Back",
+    "login to your account": "Login to your account",
+    "forgot password?": "Forgot password?",
+    "don't have an account?": "Don't have an account?",
+    "please enter your email first": "Please enter your email first",
+    "password reset email sent. please check your inbox": "Password reset email sent. Please check your inbox"
 }
