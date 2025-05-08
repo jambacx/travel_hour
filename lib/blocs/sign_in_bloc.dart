@@ -36,7 +36,6 @@ class SignInBloc extends ChangeNotifier {
   String? _errorCode;
   String? get errorCode => _errorCode;
 
-
   String? _name;
   String? get name => _name;
 
@@ -63,7 +62,8 @@ class SignInBloc extends ChangeNotifier {
   String _packageName = '';
   String get packageName => _packageName;
 
-
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
   void initPackageInfo () async{
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -73,10 +73,133 @@ class SignInBloc extends ChangeNotifier {
     
   }
 
+  Future<bool> registerWithEmailPassword(String name, String email, String password) async {
+    _isLoading = true;
+    _hasError = false;
+    notifyListeners();
+    
+    try {
+      final UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password
+      );
+      
+      User? user = userCredential.user;
+      
+      if (user != null) {
+        await user.updateDisplayName(name);
+        await user.reload();
+        user = _firebaseAuth.currentUser;
+        
+        this._name = user!.displayName;
+        this._email = user.email;
+        this._imageUrl = user.photoURL ?? defaultUserImageUrl;
+        this._uid = user.uid;
+        this._signInProvider = 'email';
+        
+        _hasError = false;
+        _isLoading = false;
+        notifyListeners();
+        
+        // Save user data to Firestore
+        await getJoiningDate();
+        await saveToFirebase();
+        await increaseUserCount();
+        await saveDataToSP();
+        await setSignIn();
+        
+        return true;
+      } else {
+        _hasError = true;
+        _errorCode = 'User creation failed';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _hasError = true;
+      _errorCode = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 
+  Future<bool> signInWithEmailPassword(String email, String password) async {
+    _isLoading = true;
+    _hasError = false;
+    notifyListeners();
+    
+    try {
+      final UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password
+      );
+      
+      User? user = userCredential.user;
+      
+      if (user != null) {
+        this._name = user.displayName;
+        this._email = user.email;
+        this._imageUrl = user.photoURL ?? defaultUserImageUrl;
+        this._uid = user.uid;
+        this._signInProvider = 'email';
+        
+        _hasError = false;
+        _isLoading = false;
+        notifyListeners();
+        
+        // Check if user exists in Firestore
+        bool userExists = await checkUserExists();
+        if (userExists) {
+          await getUserDatafromFirebase(user.uid);
+          await saveDataToSP();
+          await guestSignout();
+          await setSignIn();
+        } else {
+          await getJoiningDate();
+          await saveToFirebase();
+          await increaseUserCount();
+          await saveDataToSP();
+          await guestSignout();
+          await setSignIn();
+        }
+        
+        return true;
+      } else {
+        _hasError = true;
+        _errorCode = 'Sign in failed';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _hasError = true;
+      _errorCode = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 
-
-  
+  Future<bool> resetPassword(String email) async {
+    _isLoading = true;
+    _hasError = false;
+    notifyListeners();
+    
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _hasError = true;
+      _errorCode = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 
   Future signInWithGoogle() async {
     final GoogleSignInAccount? googleUser = await _googlSignIn.signIn();
@@ -109,8 +232,6 @@ class SignInBloc extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-
 
   Future signInwithFacebook() async {
 
@@ -151,8 +272,6 @@ class SignInBloc extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-
 
   Future signInWithApple () async {
 
@@ -207,8 +326,6 @@ class SignInBloc extends ChangeNotifier {
     
   }
 
-
-
   Future<bool> checkUserExists() async {
     
     DocumentSnapshot snap = await firestore.collection('users').doc(_uid).get();
@@ -220,7 +337,6 @@ class SignInBloc extends ChangeNotifier {
       return false;
     }
   }
-
 
   Future saveToFirebase() async {
     final DocumentReference ref = FirebaseFirestore.instance.collection('users').doc(_uid);
@@ -238,19 +354,12 @@ class SignInBloc extends ChangeNotifier {
     await ref.set(userData);
   }
 
-
-
-
-
   Future getJoiningDate() async {
     DateTime now = DateTime.now();
     String _date = DateFormat('dd-MM-yyyy').format(now);
     _joiningDate = _date;
     notifyListeners();
   }
-
-
-
 
   Future saveDataToSP() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -263,8 +372,6 @@ class SignInBloc extends ChangeNotifier {
     await sp.setString('sign_in_provider', _signInProvider!);
   }
 
-
-
   Future getDataFromSp () async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     _name = sp.getString('name');
@@ -275,8 +382,6 @@ class SignInBloc extends ChangeNotifier {
     _signInProvider = sp.getString('sign_in_provider');
     notifyListeners();
   }
-
-
 
   Future getUserDatafromFirebase(uid) async {
     await FirebaseFirestore.instance
@@ -294,8 +399,6 @@ class SignInBloc extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   Future setSignIn() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setBool('signed_in', true);
@@ -303,15 +406,11 @@ class SignInBloc extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   void checkSignIn() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     _isSignedIn = sp.getBool('signed_in') ?? false;
     notifyListeners();
   }
-
-
 
   Future userSignout() async {
     if(_signInProvider == 'apple'){
@@ -325,15 +424,12 @@ class SignInBloc extends ChangeNotifier {
     }
   }
 
-
   Future afterUserSignOut ()async{
     await clearAllData();
     _isSignedIn = false;
     _guestUser = false;
     notifyListeners();
   }
-
-
 
   Future setGuestUser() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -342,25 +438,16 @@ class SignInBloc extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   void checkGuestUser() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     _guestUser = sp.getBool('guest_user') ?? false;
     notifyListeners();
   }
 
-
-
-
   Future clearAllData() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.clear();
   }
-
-
-
-
 
   Future guestSignout() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -368,9 +455,6 @@ class SignInBloc extends ChangeNotifier {
     _guestUser = false;
     notifyListeners();
   }
-
-
-
 
   Future updateUserProfile (String newName, String newImageUrl) async{
     final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -391,8 +475,6 @@ class SignInBloc extends ChangeNotifier {
 
   }
 
-
-
   Future<int> getTotalUsersCount () async {
     final String fieldName = 'count';
     final DocumentReference ref = firestore.collection('item_count').doc('users_count');
@@ -409,7 +491,6 @@ class SignInBloc extends ChangeNotifier {
       }
   }
 
-
   Future increaseUserCount () async {
     await getTotalUsersCount()
     .then((int documentCount)async {
@@ -421,11 +502,8 @@ class SignInBloc extends ChangeNotifier {
     });
   }
 
-
   Future deleteUserDatafromDatabase () async{
     FirebaseFirestore _db = FirebaseFirestore.instance;
     await _db.collection('users').doc(uid).delete();
   }
-
-
 }
